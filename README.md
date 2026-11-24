@@ -17,6 +17,11 @@
 **GovINTEL.AI** is an AI-powered NIC Code Finder designed to simplify the process of identifying appropriate National Industrial Classification codes for different business activities.
 
 The application combines Large Language Models (LLMs), Natural Language Processing (NLP), and semantic similarity techniques to understand user-provided business descriptions and recommend the most relevant NIC codes.
+## Hugging Face Model
+
+The model used in GovINTEL.AI is hosted on Hugging Face:
+
+[Rhythm56786535/nic_code](https://huggingface.co/Rhythm56786535/nic_code)
 
 By moving beyond traditional keyword-based searching, GovINTEL.AI provides a more intuitive way to explore industrial classifications through natural-language queries.
 
