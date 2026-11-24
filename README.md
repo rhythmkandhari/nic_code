@@ -4,178 +4,106 @@
   <img src="GovINTEL.AI.png" alt="GovINTEL.AI Logo" width="200"/>
 </p>
 
-<h3 align="center">AI-Powered National Industrial Classification Code Recommendation System</h3>
+<h3 align="center">AI-powered National Industrial Classification (NIC 2008) code recommendation</h3>
 
 <p align="center">
-  An intelligent application that leverages Large Language Models and Semantic Search to identify relevant National Industrial Classification (NIC) codes from natural-language business descriptions.
+  Describe a business in plain language — in any language — and get the five closest
+  5-digit NIC codes, ranked by semantic similarity.
 </p>
 
 ---
 
-## About the Project
+## Features
 
-**GovINTEL.AI** is an AI-powered NIC Code Finder designed to simplify the process of identifying appropriate National Industrial Classification codes for different business activities.
+- **Semantic search** over all 1,304 five-digit NIC 2008 codes with Sentence Transformers (`all-MiniLM-L6-v2`), with a match score for every suggestion.
+- **Any language**: descriptions are auto-translated to English (Google Translate via `deep-translator`).
+- **Voice input**: record in the browser; speech is transcribed and placed in the search box.
+- **Optional local LLM refinement**: Llama 3.2 1B Instruct (GPT4All) rewrites the description as industry keywords before searching. Off by default.
+- **Bulk mode**: upload a CSV of companies, pick the description column, download the results.
+- **NIC code manager**: browse/filter by division, add, edit and delete codes. Changes are used by the search immediately.
+- **Database**: SQLite out of the box (zero setup) or Oracle via `python-oracledb`. Every search and contact message is stored.
+- **Accessibility**: dyslexia-friendly font switch.
 
-The application combines Large Language Models (LLMs), Natural Language Processing (NLP), and semantic similarity techniques to understand user-provided business descriptions and recommend the most relevant NIC codes.
-## Hugging Face Model
+## Quick start
 
-The model used in GovINTEL.AI is hosted on Hugging Face:
-
-[Rhythm56786535/nic_code](https://huggingface.co/Rhythm56786535/nic_code)
-
-By moving beyond traditional keyword-based searching, GovINTEL.AI provides a more intuitive way to explore industrial classifications through natural-language queries.
-
-## Key Features
-
-- **Intelligent NIC Code Search:** Identify relevant NIC codes using natural-language business descriptions.
-- **LLM-Powered Query Understanding:** Utilizes a locally available language model to understand and refine business queries.
-- **Semantic Search:** Uses Sentence Transformers to generate text embeddings and identify semantically relevant NIC descriptions.
-- **Top-5 Recommendations:** Presents the five most relevant NIC code suggestions based on similarity matching.
-- **Multilingual Query Support:** Facilitates business description searches through language translation.
-- **Interactive Web Interface:** Provides an intuitive and user-friendly application built with Streamlit.
-- **MongoDB Integration:** Supports application data management and user-related records through MongoDB.
-
-## Technology Stack
-
-| Category | Technologies |
-|---|---|
-| Programming Language | Python |
-| Frontend | Streamlit |
-| Large Language Model | GPT4All |
-| Language Model | Llama 3.2 1B Instruct |
-| NLP & Embeddings | Sentence Transformers |
-| Embedding Model | all-MiniLM-L6-v2 |
-| Deep Learning | PyTorch |
-| Similarity Matching | Cosine Similarity |
-| Database | MongoDB |
-| Data Processing | Pandas, NumPy |
-| Translation | Deep Translator |
-
-## How It Works
-
-GovINTEL.AI follows a semantic-search-based classification workflow:
-
-1. **User Input:** The user enters a description of their business activity.
-2. **Query Understanding:** The locally available LLM helps refine and understand the business description.
-3. **Text Embedding:** Sentence Transformers converts the processed query into a numerical vector representation.
-4. **Semantic Matching:** Cosine similarity measures the similarity between the query embedding and NIC activity descriptions.
-5. **Ranking:** The matching results are ranked according to their similarity scores.
-6. **Recommendations:** The application presents the top five relevant NIC codes to the user.
-
-## System Architecture
-
-```text
-             USER
-               |
-               v
-       STREAMLIT INTERFACE
-               |
-               v
-       BUSINESS DESCRIPTION
-               |
-               v
-       QUERY PROCESSING
-               |
-               v
-        LOCAL LLM (GPT4All)
-               |
-               v
-      SENTENCE TRANSFORMERS
-               |
-               v
-       TEXT EMBEDDINGS
-               |
-               v
-       COSINE SIMILARITY
-               |
-               v
-        TOP-5 NIC RESULTS
-               |
-               v
-        MONGODB DATABASE
-```
-
-## Project Structure
-
-```text
-nic_code/
-│
-├── final.py
-│
-├── final_k/
-│   └── Application pages and supporting resources
-│
-├── GovINTEL.AI.png
-├── govlogo.jpg
-├── mospi.png
-│
-└── README.md
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.9 or above
-- MongoDB
-- Required Python libraries
-- Locally available language model files
-
-### Installation
-
-**1. Clone the repository**
+Requires **Python 3.10+**.
 
 ```bash
 git clone https://github.com/rhythmkandhari/nic_code.git
-```
-
-**2. Navigate to the project directory**
-
-```bash
 cd nic_code
-```
-
-**3. Install the required dependencies**
-
-Install the Python packages used by the project in your environment, including Streamlit, PyMongo, GPT4All, Sentence Transformers, PyTorch and Pandas.
-
-**4. Configure local resources**
-
-Ensure that the locally available language model, NIC dataset and MongoDB connection are configured according to the application's existing settings.
-
-**5. Run the application**
-
-```bash
+python -m venv venv
+venv\Scripts\activate            # Windows  (macOS/Linux: source venv/bin/activate)
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt
 streamlit run final.py
 ```
 
-## Application Preview
+Open http://localhost:8501. On the first search the embedding model (~90 MB) is downloaded; after that, searches take about a second.
+The database is created automatically at `data/govintel.db` and filled from `final_k/NIC_5digit.csv`.
 
-<p align="center">
-  <img src="GovINTEL.AI.png" alt="GovINTEL.AI Application Branding" width="500"/>
-</p>
+Translation and speech recognition call Google's free web services, so they need internet access. If translation fails, the original text is searched.
 
-## Project Highlights
+### Using Oracle instead of SQLite (optional)
 
-- Integration of Large Language Models with semantic information retrieval.
-- Application of NLP and vector embeddings to industrial classification.
-- Local LLM integration for business-query understanding.
-- Semantic similarity-based NIC code recommendations.
-- MongoDB-backed application data management.
-- Development of an interactive AI-powered classification application.
+1. Create a dedicated database user (don't use `SYSTEM`) and run `sql/schema_oracle.sql` as that user.
+2. Copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and set `backend = "oracle"`, `user`, `password`, `dsn`.
+3. Start the app. The NIC codes are loaded into the table on first start.
+
+`secrets.toml` is git-ignored, so credentials never reach GitHub.
+
+## How it works
+
+```text
+description ──► translate to English ──► (optional) LLM keyword rewrite
+                                                │
+NIC_CODES table ──► embeddings (cached once) ───┤
+                                                ▼
+                                   cosine similarity ──► top-5 codes + scores
+                                                │
+                                                ▼
+                                   saved to RESULT_CODES
+```
+
+## Project structure
+
+```text
+nic_code/
+├── final.py                 # entrypoint: page config, DB init, navigation, shared sidebar
+├── govintel/
+│   ├── db.py                # SQLite / Oracle connection, init + seeding
+│   ├── search.py            # embeddings, LLM refinement, translation, speech-to-text
+│   └── ui.py                # logo + font selector shared by all pages
+├── final_k/
+│   ├── home.py              # search, voice input, bulk CSV
+│   ├── NCI.py               # browse / add / edit / delete NIC codes
+│   ├── About.py
+│   ├── contact.py
+│   └── NIC_5digit.csv       # NIC 2008 5-digit codes (seed data)
+├── sql/
+│   ├── schema_sqlite.sql    # applied automatically
+│   └── schema_oracle.sql    # run once for Oracle
+├── .streamlit/secrets.toml.example
+└── requirements.txt
+```
+
+## Technology stack
+
+| Category | Technologies |
+|---|---|
+| Language | Python |
+| Frontend | Streamlit |
+| Embeddings | Sentence Transformers – all-MiniLM-L6-v2 (PyTorch, CPU) |
+| Optional LLM | GPT4All – Llama 3.2 1B Instruct (Q4_0) |
+| Database | SQLite (default) or Oracle (python-oracledb) |
+| Translation / speech | deep-translator, SpeechRecognition |
+| Data | Pandas |
 
 ## Author
 
-**Rhythm Kandhari**
+**Rhythm Kandhari** · GitHub: [@rhythmkandhari](https://github.com/rhythmkandhari)
 
-GitHub: [@rhythmkandhari](https://github.com/rhythmkandhari)
-
-**Project:** GovINTEL.AI – Intelligent NIC Code Finder
-
-**Domain:** Artificial Intelligence | Natural Language Processing | Large Language Models | Semantic Search
+Related model on Hugging Face: [Rhythm56786535/nic_code](https://huggingface.co/Rhythm56786535/nic_code)
 
 ---
 
-<p align="center">
-  <b>GovINTEL.AI – Making Industrial Classification Smarter.</b>
-</p>
+<p align="center"><b>GovINTEL.AI – Making Industrial Classification Smarter.</b></p>
