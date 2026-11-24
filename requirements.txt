@@ -1,0 +1,12 @@
+# CPU-only PyTorch is enough (and much smaller):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
+streamlit>=1.48
+pandas>=2.0
+sentence-transformers>=3.0
+deep-translator>=1.11
+SpeechRecognition>=3.10
+# Optional: only used when "Refine query with local LLM" is switched on
+gpt4all>=2.8
+# Optional: only used when backend = "oracle" in .streamlit/secrets.toml
+oracledb>=2.0
