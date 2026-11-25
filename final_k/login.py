@@ -1,33 +1,30 @@
 import streamlit as st
-import cx_Oracle
-from datetime import datetime
+from final_k.local_db import get_connection
 
 
 st.set_page_config(page_title="Login / Register", layout="wide")
 
 
-dsn = cx_Oracle.makedsn("127.0.0.1", port=1521, sid="XE")  
-conn = cx_Oracle.connect(user="SYSTEM", password="RHYTHM", dsn=dsn)
+conn = get_connection()
 cursor = conn.cursor()
 
 if "history" not in st.session_state:
     st.session_state["history"] = []
 if "voice_input" not in st.session_state:
     st.session_state["voice_input"] = ""
-if "is_authenticated" not in st.session_state:
-    st.session_state["is_authenticated"] = False
-    st.session_state["user_email"] = "anonymous"
+st.session_state.setdefault("is_authenticated", False)
+st.session_state.setdefault("user_email", "anonymous")
 
 st.sidebar.image("GovINTEL.AI.png", use_container_width=True)
 st.sidebar.title("📜 Search History")
 
 if st.session_state["is_authenticated"]:
     
-    cursor.execute("SELECT * FROM RESULT_CODES WHERE ACTIVITY_NAME = :1 ORDER BY ID DESC", (st.session_state["user_email"],))
+    cursor.execute("SELECT ACTIVITY_NAME, PREDICTED_NIC FROM RESULT_CODES WHERE USER_NAME = ? ORDER BY ID DESC", (st.session_state["user_email"],))
     history_records = cursor.fetchall()
     if history_records:
-        for i, entry in enumerate(history_records, start=1):
-            st.sidebar.markdown(f"**{i}.** {entry[1]}  \n🚀 *{entry[4]}*")
+        for i, (user_input, nic_codes) in enumerate(history_records, start=1):
+            st.sidebar.markdown(f"**{i}.** {user_input}  \n🚀 *{nic_codes}*")
     else:
         st.sidebar.info("No history yet.")
 else:
@@ -36,7 +33,7 @@ else:
 
 if st.sidebar.button("Clear History"):
     if st.session_state["is_authenticated"]:
-        cursor.execute("DELETE FROM RESULT_CODES WHERE ACTIVITY_NAME = :1", (st.session_state["user_email"],))
+        cursor.execute("DELETE FROM RESULT_CODES WHERE USER_NAME = ?", (st.session_state["user_email"],))
         conn.commit()
         st.sidebar.success("Your history cleared!")
     else:
@@ -49,16 +46,16 @@ st.write("""To access all features of **NIC Code Finder**, please log in or crea
 
 
 def create_user(email, password):
-    cursor.execute("SELECT * FROM LOGIN_DETAILS WHERE USER_NAME = :1", (email,))
+    cursor.execute("SELECT * FROM LOGIN_DETAILS WHERE USER_NAME = ?", (email,))
     existing_user = cursor.fetchone()
     if existing_user:
         return False
-    cursor.execute("INSERT INTO LOGIN_DETAILS (ID, USER_NAME, PASSWORD) VALUES (SEQ_LOGIN_DETAILS_ID.NEXTVAL, :1, :2)", (email, password))
+    cursor.execute("INSERT INTO LOGIN_DETAILS (USER_NAME, PASSWORD) VALUES (?, ?)", (email, password))
     conn.commit()
     return True
 
 def authenticate_user(email, password):
-    cursor.execute("SELECT * FROM LOGIN_DETAILS WHERE USER_NAME = :1 AND PASSWORD = :2", (email, password))
+    cursor.execute("SELECT * FROM LOGIN_DETAILS WHERE USER_NAME = ? AND PASSWORD = ?", (email, password))
     user = cursor.fetchone()
     if user:
         return True
